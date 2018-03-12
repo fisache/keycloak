@@ -19,18 +19,21 @@ package org.keycloak.examples.domainextension.rest;
 
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.services.resource.RealmResourceProvider;
+import org.keycloak.theme.FreeMarkerUtil;
 
 public class ExampleRealmResourceProvider implements RealmResourceProvider {
 
     private KeycloakSession session;
+    private FreeMarkerUtil freeMarker;
 
-    public ExampleRealmResourceProvider(KeycloakSession session) {
+    public ExampleRealmResourceProvider(KeycloakSession session, FreeMarkerUtil freeMarker) {
         this.session = session;
+        this.freeMarker = freeMarker;
     }
 
     @Override
     public Object getResource() {
-        return new ExampleRestResource(session);
+        return new ExampleRestResource(session, freeMarker);
     }
 
     @Override

@@ -22,10 +22,12 @@ import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.KeycloakSessionFactory;
 import org.keycloak.services.resource.RealmResourceProvider;
 import org.keycloak.services.resource.RealmResourceProviderFactory;
+import org.keycloak.theme.FreeMarkerUtil;
 
 public class ExampleRealmResourceProviderFactory implements RealmResourceProviderFactory {
 
     public static final String ID = "example";
+    private FreeMarkerUtil freeMarker;
 
     @Override
     public String getId() {
@@ -34,11 +36,12 @@ public class ExampleRealmResourceProviderFactory implements RealmResourceProvide
 
     @Override
     public RealmResourceProvider create(KeycloakSession session) {
-        return new ExampleRealmResourceProvider(session);
+        return new ExampleRealmResourceProvider(session, freeMarker);
     }
 
     @Override
     public void init(Scope config) {
+        freeMarker = new FreeMarkerUtil();
     }
 
     @Override
