@@ -335,6 +335,11 @@ public class TokenEndpoint {
             throw new CorsErrorResponseException(cors, OAuthErrorException.INVALID_GRANT, "Auth error", Response.Status.BAD_REQUEST);
         }
 
+        if(!hasRoleToClient(user, client)) {
+            event.error(Errors.INVALID_USER_CREDENTIALS);
+            throw new CorsErrorResponseException(cors, OAuthErrorException.INVALID_GRANT, "User authorization error", Status.FORBIDDEN);
+        }
+
         if (!client.isStandardFlowEnabled()) {
             event.error(Errors.NOT_ALLOWED);
             throw new CorsErrorResponseException(cors, OAuthErrorException.INVALID_GRANT, "Client not allowed to exchange code", Response.Status.BAD_REQUEST);
@@ -441,6 +446,46 @@ public class TokenEndpoint {
         event.success();
 
         return cors.builder(Response.ok(res).type(MediaType.APPLICATION_JSON_TYPE)).build();
+    }
+
+    private boolean hasRoleToClient(UserModel user, ClientModel client) {
+        String clientId = client.getClientId();
+        // if default client
+        if(clientId.equals(Constants.ADMIN_CLI_CLIENT_ID)
+                || clientId.equals(Constants.ADMIN_CONSOLE_CLIENT_ID)
+                || clientId.equals(Constants.ACCOUNT_MANAGEMENT_CLIENT_ID)
+                || clientId.equals(Constants.BROKER_SERVICE_CLIENT_ID)
+                || clientId.equals(Constants.REALM_MANAGEMENT_CLIENT_ID)) {
+            return true;
+        }
+
+        // if client scope
+        if(client.isFullScopeAllowed()) {
+            return true;
+        }
+
+        // if has realm role
+        for(RoleModel role : user.getRealmRoleMappings()) {
+            if(role.getName().equals(Constants.OFFLINE_ACCESS_ROLE)
+                    || role.getName().equals(Constants.AUTHZ_UMA_AUTHORIZATION)) {
+                continue;
+            }
+            else {
+                return true;
+            }
+        }
+
+        // if has client role
+        for(RoleModel role : user.getClientRoleMappings(client)) {
+            if(role.getName().equals(Constants.AUTHZ_UMA_PROTECTION)) {
+                continue;
+            }
+            else {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public Response refreshTokenGrant() {
